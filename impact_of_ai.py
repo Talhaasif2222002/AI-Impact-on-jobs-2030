@@ -18,7 +18,7 @@ REPO = "YOUR_REPO"
 FILE_NAME = "AI_Impact_on_Jobs_2030.csv"
 
 # Construct the Raw URL
-GITHUB_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/{FILE_NAME}"
+GITHUB_URL = f"https://raw.githubusercontent.com/Talhaasif2222002/AI-Impact-on-jobs-2030/main/AI_Impact_on_Jobs_2030"
 
 @st.cache_data(show_spinner="Fetching data from GitHub...")
 def get_data_automatically(url):
