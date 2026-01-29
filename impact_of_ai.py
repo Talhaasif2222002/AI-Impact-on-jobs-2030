@@ -1,73 +1,43 @@
-import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from io import StringIO
-import requests
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
 
-# --- AUTOMATIC DATA LOADING CONFIG ---
-# Replace with the details from your GitHub screen!
-USERNAME = "YOUR_USERNAME" 
-REPO = "YOUR_REPO"
-FILE_NAME = "AI_Impact_on_Jobs_2030.csv"
-
-# Construct the Raw URL
-GITHUB_URL = f"https://raw.githubusercontent.com/Talhaasif2222002/AI-Impact-on-jobs-2030/main/AI_Impact_on_Jobs_2030"
-
-@st.cache_data(show_spinner="Fetching data from GitHub...")
-def get_data_automatically(url):
+def analyze_ai_impact():
+    # 1. Load the dataset
+    file_path = 'AI_Impact_on_Jobs_2030.csv'
+    
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return pd.read_csv(StringIO(response.text))
-        else:
-            st.error(f"Error: Could not find file at {url}")
-            return None
-    except Exception as e:
-        st.error(f"Failed to connect: {e}")
-        return None
+        df = pd.read_csv(file_path)
+        print("--- Dataset Successfully Loaded ---")
+        print(df.head())
+    except FileNotFoundError:
+        print(f"Error: {file_path} not found. Please ensure the CSV is in the same folder.")
+        return
 
-# --- APP START ---
-st.set_page_config(page_title="AI Impact Analysis", layout="wide")
-st.title("🤖 AI Impact on Jobs 2030")
+    # 2. Basic Data Cleaning & Analysis
+    # Assuming columns like 'Job_Title', 'AI_Impact_Score', and 'Automation_Risk' exist
+    # Let's create a summary of impact by industry or job type
+    print("\n--- Summary Statistics ---")
+    print(df.describe())
 
-df = get_data_automatically(GITHUB_URL)
+    # 3. Visualization: Top 10 Jobs by AI Impact Score
+    plt.figure(figsize=(12, 6))
+    
+    # Sorting values for a better chart
+    # Note: Replace 'AI_Impact_Score' and 'Job_Title' with the exact column names in your CSV
+    top_impact = df.sort_values(by='AI_Impact_Score', ascending=False).head(10)
+    
+    sns.barplot(data=top_impact, x='AI_Impact_Score', y='Job_Title', palette='viridis')
+    
+    plt.title('Top 10 Jobs Predicted to be Impacted by AI (2030)')
+    plt.xlabel('Impact Score (0-100)')
+    plt.ylabel('Job Title')
+    plt.tight_layout()
+    
+    # Save the plot
+    plt.savefig('ai_impact_chart.png')
+    print("\nChart saved as 'ai_impact_chart.png'")
+    plt.show()
 
-if df is not None:
-    st.success("Data loaded automatically!")
-    
-    # 3. Quick Preprocessing
-    target = 'Risk_Category'
-    # Drop rows without target
-    df = df.dropna(subset=[target])
-    
-    # Simple Features (drop text columns)
-    X = df.select_dtypes(include=[np.number])
-    y = LabelEncoder().fit_transform(df[target])
-
-    # 4. Train Model
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    model = RandomForestClassifier(n_estimators=50)
-    model.fit(X_train, y_train)
-    
-    # 5. Dashboard Visuals
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Model Accuracy", f"{accuracy_score(y_test, model.predict(X_test)):.2%}")
-    
-    with col2:
-        st.write("### Data Preview")
-        st.dataframe(df.head(5))
-
-    # Feature Importance Plot
-    st.write("### Top Factors Driving AI Risk")
-    fig, ax = plt.subplots()
-    pd.Series(model.feature_importances_, index=X.columns).nlargest(10).plot(kind='barh', ax=ax)
-    st.pyplot(fig)
+if __name__ == "__main__":
+    analyze_ai_impact()
